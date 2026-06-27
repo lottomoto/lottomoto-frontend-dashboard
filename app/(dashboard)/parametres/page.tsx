@@ -113,7 +113,7 @@ export default function ParametresPage() {
       "entreprise.telephone": entrepriseTel,
       "entreprise.email": entrepriseEmail,
     };
-    if (logoPreview) data["entreprise.logo"] = logoPreview;
+    if (logoPreview && !logoPreview.startsWith("blob:")) data["entreprise.logo"] = logoPreview;
     saveSection("entreprise", data);
   };
 
@@ -361,7 +361,8 @@ export default function ParametresPage() {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        setLogoPreview(URL.createObjectURL(file));
+                        const tempUrl = URL.createObjectURL(file);
+                        setLogoPreview(tempUrl);
                         try {
                           const formData = new FormData();
                           formData.append("file", file);
@@ -369,7 +370,10 @@ export default function ParametresPage() {
                             headers: { "Content-Type": "multipart/form-data" },
                           });
                           setLogoPreview(data.url);
-                        } catch { /* */ }
+                        } catch {
+                          setLogoPreview(null);
+                          alert("Erreur lors de l'upload du logo");
+                        }
                       }}
                     />
                   </label>
