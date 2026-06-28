@@ -4,15 +4,37 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.request.use((config) => {
+let memoryAccessToken: string | null = null;
+
+export function getAccessToken(): string | null {
+  if (memoryAccessToken) return memoryAccessToken;
+  if (typeof window === "undefined") return null;
+  memoryAccessToken = sessionStorage.getItem("access_token");
+  return memoryAccessToken;
+}
+
+export function setAccessToken(token: string) {
+  memoryAccessToken = token;
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    sessionStorage.setItem("access_token", token);
+  }
+}
+
+export function clearAccessToken() {
+  memoryAccessToken = null;
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem("access_token");
+  }
+}
+
+api.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -37,10 +59,8 @@ api.interceptors.response.use(
       const isLoginPage = window.location.pathname === "/login";
       if (isLoginPage) return Promise.reject(error);
 
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (!refreshToken) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+      if (!localStorage.getItem("user")) {
+        clearAccessToken();
         localStorage.removeItem("user");
         window.location.href = "/login";
         return Promise.reject(error);
@@ -62,17 +82,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, { refresh_token: refreshToken });
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        setAccessToken(data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user));
         processQueue(null, data.access_token);
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        clearAccessToken();
         localStorage.removeItem("user");
         window.location.href = "/login";
         return Promise.reject(refreshError);

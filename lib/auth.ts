@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { clearAccessToken, getAccessToken, setAccessToken } from "./api";
 
 export interface AuthUser {
   id: string;
@@ -10,14 +10,12 @@ export interface AuthUser {
 
 export interface LoginResponse {
   access_token: string;
-  refresh_token: string;
   user: AuthUser;
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>("/auth/login", { email, password });
-  localStorage.setItem("access_token", data.access_token);
-  localStorage.setItem("refresh_token", data.refresh_token);
+  setAccessToken(data.access_token);
   localStorage.setItem("user", JSON.stringify(data.user));
   return data;
 }
@@ -27,9 +25,13 @@ export async function getMe(): Promise<AuthUser> {
   return data;
 }
 
-export function logout() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+export async function logout() {
+  try {
+    await api.post("/auth/logout");
+  } catch {
+    // Local logout should still complete if the session is already invalid.
+  }
+  clearAccessToken();
   localStorage.removeItem("user");
   window.location.href = "/login";
 }
@@ -46,10 +48,11 @@ export function getStoredUser(): AuthUser | null {
 }
 
 export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token");
+  return getAccessToken();
 }
 
 export function isAuthenticated(): boolean {
-  return !!getToken();
+  if (getToken()) return true;
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("user");
 }

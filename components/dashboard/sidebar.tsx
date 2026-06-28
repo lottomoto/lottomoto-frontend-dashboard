@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -22,14 +23,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSidebar } from "./sidebar-context";
 import { getStoredUser, logout } from "@/lib/auth";
+import api from "@/lib/api";
 
 const ALL_NAV = [
-  { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard, roles: ['admin', 'superviseur'] },
+  { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard, roles: ['admin', 'superviseur', 'comptable'] },
   { label: "Vendeurs", href: "/vendeurs", icon: Users, roles: ['admin'] },
   { label: "Succursales", href: "/succursales", icon: Building2, roles: ['admin', 'superviseur'] },
   { label: "Boules", href: "/boules", icon: Circle, roles: ['admin'] },
   { label: "Tickets", href: "/tickets", icon: Ticket, roles: ['admin'] },
-  { label: "Rapports", href: "/rapports", icon: BarChart3, roles: ['admin', 'superviseur'] },
+  { label: "Rapports", href: "/rapports", icon: BarChart3, roles: ['admin', 'superviseur', 'comptable'] },
 ];
 
 const ALL_GESTION = [
@@ -41,10 +43,24 @@ const ALL_SYSTEM = [
   { label: "Paramètres", href: "/parametres", icon: Settings, roles: ['admin'] },
 ];
 
-const tirages = [
-  { label: "Midi 13h", status: "done" },
-  { label: "Soir 18h", status: "active" },
-];
+function useTirages() {
+  const [tirages, setTirages] = useState<{ label: string; status: string }[]>([]);
+  useEffect(() => {
+    api.get<any[]>("/borlettes").then(({ data }) => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const currentTime = `${hh}:${mm}`;
+      const allTirages = data.flatMap((b: any) => b.tirages || []);
+      const unique = [...new Map(allTirages.map((t: any) => [t.nom, t])).values()] as any[];
+      setTirages(unique.map((t: any) => ({
+        label: `${t.nom} ${t.fermeture}`,
+        status: currentTime < t.fermeture ? "active" : "done",
+      })));
+    }).catch(() => {});
+  }, []);
+  return tirages;
+}
 
 type NavItem = { label: string; href: string; icon: React.ElementType; badge?: number };
 
@@ -114,6 +130,7 @@ export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
   const user = getStoredUser();
   const role = user?.role || 'admin';
+  const tirages = useTirages();
   const navItems = ALL_NAV.filter(i => i.roles.includes(role));
   const gestionItems = ALL_GESTION.filter(i => i.roles.includes(role));
   const systemItems = ALL_SYSTEM.filter(i => i.roles.includes(role));

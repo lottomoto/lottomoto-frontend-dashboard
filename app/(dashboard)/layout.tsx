@@ -7,7 +7,10 @@ import { SidebarProvider, useSidebar } from "@/components/dashboard/sidebar-cont
 import { cn } from "@/lib/utils";
 import { isAuthenticated, getStoredUser } from "@/lib/auth";
 
-const SUPERVISEUR_PAGES = ["/dashboard", "/succursales", "/rapports", "/profil"];
+const ROLE_PAGES: Record<string, string[]> = {
+  superviseur: ["/dashboard", "/succursales", "/rapports", "/profil"],
+  comptable: ["/dashboard", "/rapports", "/profil"],
+};
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar();
@@ -33,7 +36,8 @@ export default function DashboardLayout({
       return;
     }
     const user = getStoredUser();
-    if (user?.role === "superviseur" && !SUPERVISEUR_PAGES.some(p => pathname.startsWith(p))) {
+    const allowedPages = ROLE_PAGES[user?.role || ''];
+    if (allowedPages && !allowedPages.some(p => pathname.startsWith(p))) {
       router.replace("/dashboard");
       return;
     }

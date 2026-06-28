@@ -11,11 +11,19 @@ interface HeaderProps {
 
 export function Header({ tirageActif }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [timeStr, setTimeStr] = useState("");
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  useEffect(() => {
+    const update = () => setTimeStr(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (searchOpen) inputRef.current?.focus();
@@ -38,7 +46,7 @@ export function Header({ tirageActif }: HeaderProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Vue d&apos;ensemble</h1>
-          <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
+          <p className="text-sm text-muted-foreground capitalize">{dateStr} · <span className="tabular-nums">{timeStr}</span></p>
         </div>
         <div className="flex items-center gap-3" ref={searchRef}>
           {searchOpen ? (
