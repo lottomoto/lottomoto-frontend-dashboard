@@ -18,6 +18,7 @@ import {
   Megaphone,
   CalendarClock,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -40,6 +41,7 @@ const ALL_GESTION = [
 ];
 
 const ALL_SYSTEM = [
+  { label: "Historique (Logs)", href: "/logs", icon: ClipboardList, roles: ['admin'] },
   { label: "Paramètres", href: "/parametres", icon: Settings, roles: ['admin'] },
 ];
 
