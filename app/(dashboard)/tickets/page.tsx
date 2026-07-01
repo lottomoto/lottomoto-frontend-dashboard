@@ -22,9 +22,26 @@ const STATUS_FILTERS = [
   { id: "perdu", label: "Perdu" },
 ];
 
+const HTZ = "America/Port-au-Prince";
+
 const formatDate = (iso: string) => {
   try {
-    return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+    // Plain date strings (YYYY-MM-DD) are parsed as UTC midnight by JS,
+    // causing a -1 day shift in UTC-4. Appending T12:00:00 treats it as local noon.
+    const normalized = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + "T12:00:00" : iso;
+    return new Date(normalized).toLocaleDateString("fr-FR", {
+      day: "numeric", month: "short", year: "numeric", timeZone: HTZ,
+    });
+  } catch { return iso; }
+};
+
+const formatDateTime = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleString("fr-FR", {
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: true, timeZone: HTZ,
+    });
   } catch { return iso; }
 };
 
@@ -248,8 +265,8 @@ export default function TicketsPage() {
                   <p className="text-sm font-medium">{detailTicket.tirage} · {detailTicket.borlette}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">Date</p>
-                  <p className="text-sm font-medium">{formatDate(detailTicket.date)}</p>
+                  <p className="text-xs text-muted-foreground">Date &amp; Heure</p>
+                  <p className="text-sm font-medium leading-snug">{formatDateTime(detailTicket.createdAt)}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
                   <p className="text-xs text-muted-foreground">Montant</p>
