@@ -54,6 +54,10 @@ export async function toggleVendeurActive(id: string): Promise<Vendeur> {
   return data;
 }
 
+export async function resetVendeurDevice(id: string): Promise<void> {
+  await api.patch(`/vendeurs/${id}/reset-device`);
+}
+
 export async function deleteVendeur(id: string): Promise<void> {
   await api.delete(`/vendeurs/${id}`);
 }

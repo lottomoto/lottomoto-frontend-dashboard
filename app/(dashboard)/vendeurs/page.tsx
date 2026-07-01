@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, MoreHorizontal, Phone, CheckCircle, XCircle, Pencil, Power, Eye, Loader2 } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Phone, CheckCircle, XCircle, Pencil, Power, Eye, Loader2, Smartphone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,6 +28,7 @@ import {
   createVendeur,
   updateVendeur,
   toggleVendeurActive,
+  resetVendeurDevice,
 } from "@/lib/vendeurs";
 
 export default function VendeursPage() {
@@ -39,6 +40,7 @@ export default function VendeursPage() {
   const [detailVendeur, setDetailVendeur] = useState<Vendeur | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resetDeviceId, setResetDeviceId] = useState<string | null>(null);
 
   const [formNom, setFormNom] = useState("");
   const [formPrenom, setFormPrenom] = useState("");
@@ -157,6 +159,16 @@ export default function VendeursPage() {
       fetchVendeurs();
     } catch {
       setError("Erreur lors du changement de statut");
+    }
+  };
+
+  const handleResetDevice = async (id: string) => {
+    try {
+      await resetVendeurDevice(id);
+      setResetDeviceId(null);
+      fetchVendeurs();
+    } catch {
+      setError("Erreur lors de la réinitialisation de l'appareil");
     }
   };
 
@@ -298,6 +310,11 @@ export default function VendeursPage() {
                             Éditer
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setResetDeviceId(v.id)}>
+                            <Smartphone className="h-4 w-4 mr-2" />
+                            Réinitialiser appareil
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleToggleActive(v.id)}>
                             <Power className="h-4 w-4 mr-2" />
                             {v.isActive ? "Désactiver" : "Activer"}
@@ -406,6 +423,30 @@ export default function VendeursPage() {
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {editingId ? "Enregistrer" : "Créer le vendeur"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset device confirm */}
+      <Dialog open={!!resetDeviceId} onOpenChange={(open) => !open && setResetDeviceId(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-primary" />
+              Réinitialiser l&apos;appareil
+            </DialogTitle>
+            <DialogDescription>
+              Le vendeur pourra se connecter depuis n&apos;importe quel appareil. Le prochain appareil utilisé sera automatiquement lié au compte.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetDeviceId(null)}>Annuler</Button>
+            <Button
+              className="bg-primary text-primary-foreground"
+              onClick={() => resetDeviceId && handleResetDevice(resetDeviceId)}
+            >
+              Confirmer
             </Button>
           </DialogFooter>
         </DialogContent>
