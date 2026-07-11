@@ -9,6 +9,8 @@ export interface TicketLigne {
   prefix: number | null;
   option: string;
   prix: number;
+  status?: string;
+  gain?: number;
 }
 
 export interface TicketData {
@@ -20,6 +22,7 @@ export interface TicketData {
   tirage: string;
   date: string;
   total: number;
+  gainTotal?: number;
   status: string;
   lignes: TicketLigne[];
   createdAt: string;

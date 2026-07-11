@@ -165,7 +165,7 @@ function SuperviseurDashboardView() {
   );
 }
 
-function ComptableDashboardView() {
+export function ComptableDashboardView() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [collectSup, setCollectSup] = useState<{ id: string; nom: string; cashACollecter: number } | null>(null);

@@ -272,6 +272,12 @@ export default function TicketsPage() {
                   <p className="text-xs text-muted-foreground">Montant</p>
                   <p className="text-sm font-bold">{Number(detailTicket.total).toLocaleString()} HTG</p>
                 </div>
+                {detailTicket.gainTotal !== undefined && detailTicket.status !== 'en_attente' && (
+                  <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3">
+                    <p className="text-xs text-green-600 font-semibold">Total Gagné</p>
+                    <p className="text-sm font-bold text-green-600">+{Number(detailTicket.gainTotal).toLocaleString()} HTG</p>
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -282,21 +288,27 @@ export default function TicketsPage() {
                     <thead>
                       <tr className="bg-muted/30">
                         <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-left">Numéro</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-left">Type</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-left">Boules</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-left">Type/Opt</th>
                         <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-right">Prix</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-right">Statut</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase text-right">Gain</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailTicket.lignes.map((l) => (
-                        <tr key={l.id} className="border-t border-border/50">
+                        <tr key={l.id} className={`border-t border-border/50 ${l.status === 'gagne' ? 'bg-green-500/10' : ''}`}>
                           <td className="px-3 py-2 text-sm font-mono font-bold tracking-widest">{l.numero}</td>
-                          <td className="px-3 py-2 text-sm">{l.type === "lotto5" ? "L5" : "L4"}</td>
-                          <td className="px-3 py-2 text-xs text-muted-foreground">
-                            {l.prefix !== null && <span className="text-primary mr-1">{l.prefix}-</span>}
-                            {String(l.boule1).padStart(2, "0")} + {String(l.boule2).padStart(2, "0")}
+                          <td className="px-3 py-2 text-sm text-muted-foreground">
+                            {l.type === "jackpot" ? "JP" : l.type === "lotto5" ? "L5" : l.type === "blotto5" ? "BL5" : l.type === "blotto4" ? "BL4" : l.type === "blotto3" ? "BL3" : l.type === "mariage" ? "MA" : l.type === "borlette" ? "BO" : "L4"}
+                            {['lotto4', 'lotto5'].includes(l.type) ? ` · ${l.option === 'opt1' ? 'Op1' : l.option === 'opt2' ? 'Op2' : 'Op3'}` : ''}
                           </td>
                           <td className="px-3 py-2 text-sm text-right tabular-nums">{Number(l.prix).toLocaleString()}</td>
+                          <td className="px-3 py-2 text-sm text-right">
+                            {l.status === 'gagne' ? <span className="text-green-500 font-bold">Gagné</span> : l.status === 'perdu' ? <span className="text-destructive">Perdu</span> : <span className="text-muted-foreground">En attente</span>}
+                          </td>
+                          <td className="px-3 py-2 text-sm text-right font-bold tabular-nums text-green-500">
+                            {l.gain !== undefined && l.gain > 0 ? `+${Number(l.gain).toLocaleString()}` : '—'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

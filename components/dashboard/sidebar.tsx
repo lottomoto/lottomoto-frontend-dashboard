@@ -19,6 +19,7 @@ import {
   CalendarClock,
   LogOut,
   ClipboardList,
+  Landmark,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,6 +31,7 @@ const ALL_NAV = [
   { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard, roles: ['admin', 'superviseur', 'comptable'] },
   { label: "Vendeurs", href: "/vendeurs", icon: Users, roles: ['admin'] },
   { label: "Succursales", href: "/succursales", icon: Building2, roles: ['admin', 'superviseur'] },
+  { label: "Collectes", href: "/collectes", icon: Landmark, roles: ['comptable'] },
   { label: "Boules", href: "/boules", icon: Circle, roles: ['admin'] },
   { label: "Tickets", href: "/tickets", icon: Ticket, roles: ['admin'] },
   { label: "Rapports", href: "/rapports", icon: BarChart3, roles: ['admin', 'superviseur', 'comptable'] },
