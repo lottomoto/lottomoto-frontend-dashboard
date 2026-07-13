@@ -26,8 +26,6 @@ const HTZ = "America/Port-au-Prince";
 
 const formatDate = (iso: string) => {
   try {
-    // Plain date strings (YYYY-MM-DD) are parsed as UTC midnight by JS,
-    // causing a -1 day shift in UTC-4. Appending T12:00:00 treats it as local noon.
     const normalized = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + "T12:00:00" : iso;
     return new Date(normalized).toLocaleDateString("fr-FR", {
       day: "numeric", month: "short", year: "numeric", timeZone: HTZ,
@@ -40,6 +38,15 @@ const formatDateTime = (iso: string) => {
     return new Date(iso).toLocaleString("fr-FR", {
       day: "numeric", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: true, timeZone: HTZ,
+    });
+  } catch { return iso; }
+};
+
+const formatTimeOnly = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleTimeString("fr-FR", {
+      hour: "2-digit", minute: "2-digit",
       hour12: true, timeZone: HTZ,
     });
   } catch { return iso; }
@@ -200,7 +207,11 @@ export default function TicketsPage() {
                   <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3"><span className="text-sm font-mono font-semibold">{t.ref}</span></td>
                     <td className="px-4 py-3 text-sm">{t.vendeur || "—"}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(t.date)}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {formatDate(t.date)}
+                      <br />
+                      <span className="text-[10px]">{formatTimeOnly(t.createdAt)}</span>
+                    </td>
                     <td className="px-4 py-3">
                       <span className="text-xs bg-muted rounded px-2 py-0.5">{t.tirage} · {t.borlette}</span>
                     </td>
