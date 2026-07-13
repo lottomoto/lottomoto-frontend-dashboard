@@ -10,6 +10,7 @@ interface StatCardProps {
   iconBg: string;
   trend?: { value: string; positive: boolean };
   subtitleColor?: string;
+  valueColor?: string;
 }
 
 export function StatCard({
@@ -20,6 +21,7 @@ export function StatCard({
   iconBg,
   trend,
   subtitleColor,
+  valueColor,
 }: StatCardProps) {
   return (
     <Card className="border-border bg-card">
@@ -42,8 +44,12 @@ export function StatCard({
             </div>
           )}
         </div>
-        <p className="mt-3 text-2xl font-bold text-card-foreground">{value}</p>
-        <p className="text-sm text-muted-foreground">{title}</p>
+        <div className="mt-4">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <div className="flex items-baseline gap-2 mt-1">
+            <h3 className={cn("text-2xl font-bold text-card-foreground", valueColor)}>{value}</h3>
+          </div>
+        </div>
         <p className={cn("mt-1 text-xs", subtitleColor || "text-muted-foreground")}>
           {subtitle}
         </p>

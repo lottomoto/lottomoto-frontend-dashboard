@@ -100,11 +100,11 @@ export default function RapportsPage() {
       rows.push([`Vendeur: ${v?.nom || selectedVendeur}`]);
     }
     const csvContent = [
-      ["Session", "Tickets", "Ventes", "Paiements", "A Payer", "Bénéfice"].join(","),
+      ["Session", "Tickets", "Ventes", "Déjà Payé", "A Payer", "Bénéfice/Perte"].join(","),
       ...(stats?.parTirage || []).map(t => [t.nom, t.tickets, t.recettes, t.paiements, t.aPayer, t.benefice].join(","))
     ].join("\n");
     rows.push([]);
-    rows.push(["Recettes", "Paiements", "À Payer", "Bénéfice", "Tickets"]);
+    rows.push(["Recettes", "Déjà Payé", "À Payer", "Bénéfice/Perte", "Tickets"]);
     rows.push([String(recettes), String(paiements), String(aPayer), String(benefice), String(ticketCount)]);
     rows.push([]);
 
@@ -196,9 +196,16 @@ export default function RapportsPage() {
           {/* Stats */}
           <div className="grid grid-cols-5 gap-4">
             <StatCard title="Recettes" value={`${fmt(recettes)} HTG`} subtitle={`${ticketCount} tickets vendus`} icon={DollarSign} iconBg="bg-blue-500" />
-            <StatCard title="Paiements" value={`${fmt(paiements)} HTG`} subtitle="Déjà payés" subtitleColor="text-destructive" icon={Trophy} iconBg="bg-orange-500" />
+            <StatCard title="Déjà Payé" value={`${fmt(paiements)} HTG`} subtitle="Déjà payés" subtitleColor="text-destructive" icon={Trophy} iconBg="bg-orange-500" />
             <StatCard title="À Payer" value={`${fmt(stats?.aPayer)} HTG`} subtitle="Gagnants non payés" subtitleColor="text-orange-500" icon={Trophy} iconBg="bg-yellow-500" />
-            <StatCard title="Bénéfice net" value={`${fmt(benefice)} HTG`} subtitle="Recettes - (Paiements + À Payer)" icon={TrendingUp} iconBg="bg-emerald-500" />
+            <StatCard 
+              title={benefice < 0 ? "Perte nette" : "Bénéfice net"} 
+              value={`${fmt(benefice)} HTG`} 
+              valueColor={benefice < 0 ? "text-destructive" : undefined}
+              subtitle="Recettes - (Payés + À Payer)" 
+              icon={TrendingUp} 
+              iconBg={benefice < 0 ? "bg-destructive" : "bg-emerald-500"} 
+            />
             <StatCard title="Vendeurs" value={vendeursActifs.toLocaleString()} subtitle="Actifs" subtitleColor="text-primary" icon={Users} iconBg="bg-purple-500" />
           </div>
 
@@ -229,9 +236,9 @@ export default function RapportsPage() {
                       <tr className="border-b border-border">
                         <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tirage</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ventes</th>
-                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paiements</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Déjà Payé</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">À Payer</th>
-                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bénéfice</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bénéfice / Perte</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -246,7 +253,9 @@ export default function RapportsPage() {
                           <td className="py-2.5 text-sm text-right tabular-nums">{t.recettes.toLocaleString()}</td>
                           <td className="py-2.5 text-sm text-right tabular-nums text-destructive">{t.paiements.toLocaleString()}</td>
                           <td className="py-2.5 text-sm text-right tabular-nums text-orange-500">{t.aPayer.toLocaleString()}</td>
-                          <td className="py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: t.benefice < 0 ? "#DC2626" : "#16A34A" }}>
+                            {t.benefice < 0 ? `Perte: ${t.benefice.toLocaleString()}` : t.benefice.toLocaleString()}
+                          </td>
                         </tr>
                       )})}
                     </tbody>

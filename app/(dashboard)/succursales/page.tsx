@@ -657,7 +657,7 @@ export default function SuccursalesPage() {
                     <p className="text-lg font-bold tabular-nums">{(branchStatsData.recettes || 0).toLocaleString()}</p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Paiements</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Déjà Payé</p>
                     <p className="text-lg font-bold tabular-nums text-destructive">{(branchStatsData.paiements || 0).toLocaleString()}</p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
@@ -665,8 +665,12 @@ export default function SuccursalesPage() {
                     <p className="text-lg font-bold tabular-nums text-orange-500">{(branchStatsData.aPayer || 0).toLocaleString()}</p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Bénéfice</p>
-                    <p className="text-lg font-bold tabular-nums" style={{ color: "#16A34A" }}>{(branchStatsData.benefice || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+                      {branchStatsData.benefice < 0 ? "Perte" : "Bénéfice"}
+                    </p>
+                    <p className="text-lg font-bold tabular-nums" style={{ color: branchStatsData.benefice < 0 ? "#DC2626" : "#16A34A" }}>
+                      {(branchStatsData.benefice || 0).toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
@@ -679,8 +683,9 @@ export default function SuccursalesPage() {
                           <tr>
                             <th className="text-left font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Session</th>
                             <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Ventes</th>
+                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Déjà Payé</th>
                             <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">À Payer</th>
-                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Bénéfice</th>
+                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Bénéfice / Perte</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -688,8 +693,11 @@ export default function SuccursalesPage() {
                             <tr key={t.nom} className="border-t border-border/50">
                               <td className="p-2.5 font-medium">{t.nom}</td>
                               <td className="p-2.5 text-right tabular-nums">{t.recettes.toLocaleString()}</td>
+                              <td className="p-2.5 text-right tabular-nums text-destructive">{t.paiements.toLocaleString()}</td>
                               <td className="p-2.5 text-right tabular-nums text-orange-500">{t.aPayer.toLocaleString()}</td>
-                              <td className="p-2.5 text-right tabular-nums" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
+                              <td className="p-2.5 text-right tabular-nums" style={{ color: t.benefice < 0 ? "#DC2626" : "#16A34A" }}>
+                                {t.benefice < 0 ? `Perte: ${t.benefice.toLocaleString()}` : t.benefice.toLocaleString()}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
