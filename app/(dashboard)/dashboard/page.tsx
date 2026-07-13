@@ -17,6 +17,7 @@ import { getStoredUser } from "@/lib/auth";
 interface DashboardStats {
   recettes: number;
   paiements: number;
+  aPayer: number;
   benefice: number;
   ticketCount: number;
   vendeursActifs: number;
@@ -27,7 +28,7 @@ interface DashboardStats {
   lotto5: number;
   topBoules: { numero: number; count: number }[];
   topVendeurs: { nom: string; ventes: number; tickets: number }[];
-  parTirage: { nom: string; recettes: number; paiements: number; benefice: number }[];
+  parTirage: { nom: string; recettes: number; paiements: number; aPayer: number; benefice: number }[];
   revenueByTirage: { [tirage: string]: string | number; date: string }[];
   tirageNames: string[];
   recentTickets: { ref: string; vendeur: string; total: number; tirage: string; createdAt: string }[];

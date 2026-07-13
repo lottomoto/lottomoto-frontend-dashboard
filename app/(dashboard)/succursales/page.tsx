@@ -651,7 +651,7 @@ export default function SuccursalesPage() {
               <p className="text-sm text-muted-foreground text-center py-8">Aucune donnée disponible</p>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Recettes</p>
                     <p className="text-lg font-bold tabular-nums">{(branchStatsData.recettes || 0).toLocaleString()}</p>
@@ -659,6 +659,10 @@ export default function SuccursalesPage() {
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Paiements</p>
                     <p className="text-lg font-bold tabular-nums text-destructive">{(branchStatsData.paiements || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">À Payer</p>
+                    <p className="text-lg font-bold tabular-nums text-orange-500">{(branchStatsData.aPayer || 0).toLocaleString()}</p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Bénéfice</p>
@@ -675,6 +679,7 @@ export default function SuccursalesPage() {
                           <tr>
                             <th className="text-left font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Session</th>
                             <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Ventes</th>
+                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">À Payer</th>
                             <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Bénéfice</th>
                           </tr>
                         </thead>
@@ -683,6 +688,7 @@ export default function SuccursalesPage() {
                             <tr key={t.nom} className="border-t border-border/50">
                               <td className="p-2.5 font-medium">{t.nom}</td>
                               <td className="p-2.5 text-right tabular-nums">{t.recettes.toLocaleString()}</td>
+                              <td className="p-2.5 text-right tabular-nums text-orange-500">{t.aPayer.toLocaleString()}</td>
                               <td className="p-2.5 text-right tabular-nums" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
                             </tr>
                           ))}

@@ -23,12 +23,13 @@ const TIRAGE_COLORS: Record<string, string> = {
 interface AdminStats {
   recettes: number;
   paiements: number;
+  aPayer: number;
   benefice: number;
   ticketCount: number;
   vendeursActifs: number;
   topVendeurs: { nom: string; ventes: number; tickets: number }[];
-  parTirage: { nom: string; tickets: number; recettes: number; paiements: number; benefice: number }[];
-  chartData: { date: string; recettes: number; paiements: number; benefice: number }[];
+  parTirage: { nom: string; tickets: number; recettes: number; paiements: number; aPayer: number; benefice: number }[];
+  chartData: { date: string; recettes: number; paiements: number; aPayer: number; benefice: number }[];
 }
 
 interface VendeurOption {
@@ -83,6 +84,7 @@ export default function RapportsPage() {
 
   const recettes = stats?.recettes || 0;
   const paiements = stats?.paiements || 0;
+  const aPayer = stats?.aPayer || 0;
   const benefice = stats?.benefice || 0;
   const ticketCount = stats?.ticketCount || 0;
   const vendeursActifs = stats?.vendeursActifs || 0;
@@ -97,27 +99,16 @@ export default function RapportsPage() {
       const v = vendeurs.find(x => x.userId === selectedVendeur);
       rows.push([`Vendeur: ${v?.nom || selectedVendeur}`]);
     }
+    const csvContent = [
+      ["Session", "Tickets", "Ventes", "Paiements", "A Payer", "Bénéfice"].join(","),
+      ...(stats?.parTirage || []).map(t => [t.nom, t.tickets, t.recettes, t.paiements, t.aPayer, t.benefice].join(","))
+    ].join("\n");
     rows.push([]);
-    rows.push(["Recettes", "Paiements", "Bénéfice", "Tickets"]);
-    rows.push([String(recettes), String(paiements), String(benefice), String(ticketCount)]);
+    rows.push(["Recettes", "Paiements", "À Payer", "Bénéfice", "Tickets"]);
+    rows.push([String(recettes), String(paiements), String(aPayer), String(benefice), String(ticketCount)]);
     rows.push([]);
 
-    if ((stats?.parTirage || []).length > 0) {
-      rows.push(["TIRAGE", "RECETTES", "PAIEMENTS", "BÉNÉFICE"]);
-      for (const t of stats!.parTirage) {
-        rows.push([t.nom, String(t.recettes), String(t.paiements), String(t.benefice)]);
-      }
-      rows.push([]);
-    }
-
-    if ((stats?.topVendeurs || []).length > 0) {
-      rows.push(["VENDEUR", "VENTES", "TICKETS"]);
-      for (const v of stats!.topVendeurs) {
-        rows.push([v.nom, String(v.ventes), String(v.tickets)]);
-      }
-    }
-
-    const csv = rows.map(r => r.join(",")).join("\n");
+    const csv = rows.map(r => r.join(",")).join("\n") + "\n\n" + csvContent;
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -203,11 +194,12 @@ export default function RapportsPage() {
       ) : (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4">
-            <StatCard title="Recettes totales" value={`${fmt(recettes)} HTG`} subtitle={`${ticketCount} tickets vendus`} icon={DollarSign} iconBg="bg-blue-500" />
-            <StatCard title="Paiements gagnants" value={`${fmt(paiements)} HTG`} subtitle={`Taux: ${paiementsTaux}% des recettes`} subtitleColor="text-destructive" icon={Trophy} iconBg="bg-orange-500" />
-            <StatCard title="Bénéfice net" value={`${fmt(benefice)} HTG`} subtitle="Recettes - Paiements" icon={TrendingUp} iconBg="bg-emerald-500" />
-            <StatCard title="Tickets vendus" value={ticketCount.toLocaleString()} subtitle={`${vendeursActifs} vendeur${vendeursActifs > 1 ? "s" : ""} actif${vendeursActifs > 1 ? "s" : ""}`} subtitleColor="text-primary" icon={Users} iconBg="bg-purple-500" />
+          <div className="grid grid-cols-5 gap-4">
+            <StatCard title="Recettes" value={`${fmt(recettes)} HTG`} subtitle={`${ticketCount} tickets vendus`} icon={DollarSign} iconBg="bg-blue-500" />
+            <StatCard title="Paiements" value={`${fmt(paiements)} HTG`} subtitle="Déjà payés" subtitleColor="text-destructive" icon={Trophy} iconBg="bg-orange-500" />
+            <StatCard title="À Payer" value={`${fmt(stats?.aPayer)} HTG`} subtitle="Gagnants non payés" subtitleColor="text-orange-500" icon={Trophy} iconBg="bg-yellow-500" />
+            <StatCard title="Bénéfice net" value={`${fmt(benefice)} HTG`} subtitle="Recettes - (Paiements + À Payer)" icon={TrendingUp} iconBg="bg-emerald-500" />
+            <StatCard title="Vendeurs" value={vendeursActifs.toLocaleString()} subtitle="Actifs" subtitleColor="text-primary" icon={Users} iconBg="bg-purple-500" />
           </div>
 
           {/* Chart + Tirages */}
@@ -228,7 +220,7 @@ export default function RapportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card w-[450px]">
+            <Card className="border-border bg-card w-[550px]">
               <CardContent className="p-5">
                 <h3 className="text-base font-semibold mb-4">Par tirage</h3>
                 {(stats?.parTirage || []).length > 0 ? (
@@ -236,8 +228,9 @@ export default function RapportsPage() {
                     <thead>
                       <tr className="border-b border-border">
                         <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tirage</th>
-                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recettes</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ventes</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paiements</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">À Payer</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bénéfice</th>
                       </tr>
                     </thead>
@@ -252,6 +245,7 @@ export default function RapportsPage() {
                           </td>
                           <td className="py-2.5 text-sm text-right tabular-nums">{t.recettes.toLocaleString()}</td>
                           <td className="py-2.5 text-sm text-right tabular-nums text-destructive">{t.paiements.toLocaleString()}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums text-orange-500">{t.aPayer.toLocaleString()}</td>
                           <td className="py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
                         </tr>
                       )})}
