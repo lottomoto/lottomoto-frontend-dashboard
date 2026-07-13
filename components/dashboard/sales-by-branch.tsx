@@ -6,15 +6,15 @@ interface SalesByBranchProps {
 }
 
 export function SalesByBranch({ data }: SalesByBranchProps) {
-  const max = data[0]?.recettes || 1;
-  const fmt = (n: number) => n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+  const max = data?.[0]?.recettes || 1;
+  const fmt = (n: number) => n.toLocaleString();
 
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-card-foreground">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          Ventes par borlette
+          Ventes par session
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

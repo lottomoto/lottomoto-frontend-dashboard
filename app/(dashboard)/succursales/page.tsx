@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, MapPin, Users, MoreHorizontal, Pencil, Power, Loader2, Banknote } from "lucide-react";
+import { Search, Plus, MapPin, Users, MoreHorizontal, Pencil, Power, Loader2, Banknote, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,13 @@ export default function SuccursalesPage() {
   const [rapportsList, setRapportsList] = useState<{ id: string; date: string; cashCollecte: number; dette: number; notes: string; createdAt: string }[]>([]);
   const [loadingRapports, setLoadingRapports] = useState(false);
 
+  const [statsDialogId, setStatsDialogId] = useState<string | null>(null);
+  const [statsDialogNom, setStatsDialogNom] = useState("");
+  const [statsVendeurId, setStatsVendeurId] = useState<string | null>(null);
+  const [statsPeriode, setStatsPeriode] = useState("auj");
+  const [branchStatsData, setBranchStatsData] = useState<any>(null);
+  const [loadingBranchStats, setLoadingBranchStats] = useState(false);
+
   const [formNom, setFormNom] = useState("");
   const [formAdresse, setFormAdresse] = useState("");
   const [formMateriel, setFormMateriel] = useState("");
@@ -105,7 +112,29 @@ export default function SuccursalesPage() {
     }
   }, [isSuperviseur]);
 
+  const fetchBranchStats = useCallback(async (vendeurId: string, periode: string) => {
+    if (!vendeurId) {
+      setBranchStatsData(null);
+      return;
+    }
+    setLoadingBranchStats(true);
+    try {
+      const res = await api.get(`/tickets/admin/stats?periode=${periode}&vendeurId=${vendeurId}`);
+      setBranchStatsData(res.data);
+    } catch {
+      setBranchStatsData(null);
+    } finally {
+      setLoadingBranchStats(false);
+    }
+  }, []);
+
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (statsDialogId && statsVendeurId) {
+      fetchBranchStats(statsVendeurId, statsPeriode);
+    }
+  }, [statsDialogId, statsVendeurId, statsPeriode, fetchBranchStats]);
 
   const filtered = succursales.filter((s) => {
     if (!searchQuery) return true;
@@ -322,7 +351,7 @@ export default function SuccursalesPage() {
                   <p className="text-xs font-bold text-card-foreground font-mono">{s.materielId}</p>
                 </div>
 
-                {isSuperviseur && (
+                {isSuperviseur ? (
                   <>
                     {(() => {
                       const st = succursaleStats[s.id];
@@ -367,8 +396,43 @@ export default function SuccursalesPage() {
                         <Banknote className="h-4 w-4" />
                         Collecter
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-1"
+                        disabled={!s.vendeur?.userId}
+                        onClick={() => {
+                          setStatsDialogId(s.id);
+                          setStatsDialogNom(s.nom);
+                          setStatsVendeurId(s.vendeur?.userId || null);
+                          setStatsPeriode("auj");
+                          setBranchStatsData(null);
+                        }}
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        Rapport
+                      </Button>
                     </div>
                   </>
+                ) : (
+                  <div className="flex mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2"
+                      disabled={!s.vendeur?.userId}
+                      onClick={() => {
+                        setStatsDialogId(s.id);
+                        setStatsDialogNom(s.nom);
+                        setStatsVendeurId(s.vendeur?.userId || null);
+                        setStatsPeriode("auj");
+                        setBranchStatsData(null);
+                      }}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      Voir le rapport
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -555,6 +619,85 @@ export default function SuccursalesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewRapportsId(null)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stats/Rapport Dialog */}
+      <Dialog open={!!statsDialogId} onOpenChange={(open) => !open && setStatsDialogId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rapport · {statsDialogNom}</DialogTitle>
+            <DialogDescription>Statistiques des ventes de cette succursale</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="flex justify-end">
+              <select
+                className="rounded-md border border-border bg-card px-3 py-1.5 text-sm outline-none cursor-pointer"
+                value={statsPeriode}
+                onChange={(e) => setStatsPeriode(e.target.value)}
+              >
+                <option value="auj">Aujourd'hui</option>
+                <option value="hier">Hier</option>
+                <option value="semaine">Cette semaine</option>
+                <option value="mois">Ce mois</option>
+              </select>
+            </div>
+
+            {loadingBranchStats ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : !branchStatsData || !statsVendeurId ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Aucune donnée disponible</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Recettes</p>
+                    <p className="text-lg font-bold tabular-nums">{(branchStatsData.recettes || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Paiements</p>
+                    <p className="text-lg font-bold tabular-nums text-destructive">{(branchStatsData.paiements || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Bénéfice</p>
+                    <p className="text-lg font-bold tabular-nums" style={{ color: "#16A34A" }}>{(branchStatsData.benefice || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Par session</h4>
+                  {branchStatsData.parTirage?.length > 0 ? (
+                    <div className="rounded-md border border-border overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th className="text-left font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Session</th>
+                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Ventes</th>
+                            <th className="text-right font-medium p-2 text-muted-foreground text-xs uppercase tracking-wider">Bénéfice</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {branchStatsData.parTirage.map((t: any) => (
+                            <tr key={t.nom} className="border-t border-border/50">
+                              <td className="p-2.5 font-medium">{t.nom}</td>
+                              <td className="p-2.5 text-right tabular-nums">{t.recettes.toLocaleString()}</td>
+                              <td className="p-2.5 text-right tabular-nums" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucune vente pour cette période</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatsDialogId(null)}>Fermer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

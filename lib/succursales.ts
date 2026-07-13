@@ -2,6 +2,7 @@ import api from "./api";
 
 export interface SuccursaleVendeur {
   id: string;
+  userId: string;
   nom: string;
   username: string;
 }

@@ -27,7 +27,7 @@ interface DashboardStats {
   lotto5: number;
   topBoules: { numero: number; count: number }[];
   topVendeurs: { nom: string; ventes: number; tickets: number }[];
-  parBorlette: { nom: string; recettes: number; paiements: number; benefice: number }[];
+  parTirage: { nom: string; recettes: number; paiements: number; benefice: number }[];
   revenueByTirage: { [tirage: string]: string | number; date: string }[];
   tirageNames: string[];
   recentTickets: { ref: string; vendeur: string; total: number; tirage: string; createdAt: string }[];
@@ -92,7 +92,7 @@ function AdminDashboard() {
         <BetTypesChart lotto4={stats.lotto4} lotto5={stats.lotto5} />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <SalesByBranch data={stats.parBorlette} />
+        <SalesByBranch data={stats.parTirage || []} />
         <TopBoules data={stats.topBoules} />
         <RecentActivity data={stats.recentTickets} />
       </div>

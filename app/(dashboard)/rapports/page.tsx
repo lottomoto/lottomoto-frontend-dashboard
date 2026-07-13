@@ -27,8 +27,7 @@ interface AdminStats {
   ticketCount: number;
   vendeursActifs: number;
   topVendeurs: { nom: string; ventes: number; tickets: number }[];
-  tiragesJour: { nom: string; tickets: number; montant: number }[];
-  parBorlette: { nom: string; recettes: number; paiements: number; benefice: number }[];
+  parTirage: { nom: string; tickets: number; recettes: number; paiements: number; benefice: number }[];
   chartData: { date: string; recettes: number; paiements: number; benefice: number }[];
 }
 
@@ -40,8 +39,6 @@ interface VendeurOption {
 
 const fmt = (n: number | undefined | null) => {
   const v = Number(n) || 0;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
   return v.toLocaleString();
 };
 
@@ -90,7 +87,7 @@ export default function RapportsPage() {
   const ticketCount = stats?.ticketCount || 0;
   const vendeursActifs = stats?.vendeursActifs || 0;
   const paiementsTaux = recettes > 0 ? ((paiements / recettes) * 100).toFixed(1) : "0";
-  const totalJour = (stats?.tiragesJour || []).reduce((s, t) => s + t.montant, 0);
+  const totalJour = (stats?.parTirage || []).reduce((s, t) => s + t.recettes, 0);
 
   const handleExport = () => {
     const rows: string[][] = [];
@@ -105,10 +102,10 @@ export default function RapportsPage() {
     rows.push([String(recettes), String(paiements), String(benefice), String(ticketCount)]);
     rows.push([]);
 
-    if ((stats?.parBorlette || []).length > 0) {
-      rows.push(["BORLETTE", "RECETTES", "PAIEMENTS", "BÉNÉFICE"]);
-      for (const b of stats!.parBorlette) {
-        rows.push([b.nom, String(b.recettes), String(b.paiements), String(b.benefice)]);
+    if ((stats?.parTirage || []).length > 0) {
+      rows.push(["TIRAGE", "RECETTES", "PAIEMENTS", "BÉNÉFICE"]);
+      for (const t of stats!.parTirage) {
+        rows.push([t.nom, String(t.recettes), String(t.paiements), String(t.benefice)]);
       }
       rows.push([]);
     }
@@ -231,64 +228,33 @@ export default function RapportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card w-80">
+            <Card className="border-border bg-card w-[450px]">
               <CardContent className="p-5">
-                <h3 className="text-base font-semibold mb-4">Tirages du jour</h3>
-                <div className="space-y-4">
-                  {(stats?.tiragesJour || []).length > 0 ? (
-                    (stats?.tiragesJour || []).map((t) => {
-                      const color = TIRAGE_COLORS[t.nom] || "#6B7280";
-                      return (
-                        <div key={t.nom}>
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ backgroundColor: color }}>{t.nom}</span>
-                              <span className="text-xs text-muted-foreground">{t.tickets} tickets</span>
-                            </div>
-                            <span className="text-sm font-bold tabular-nums">{t.montant.toLocaleString()} <span className="text-[9px] text-muted-foreground">HTG</span></span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: totalJour > 0 ? `${(t.montant / totalJour) * 100}%` : "0%", backgroundColor: color }} />
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-xs text-muted-foreground text-center py-4">Aucun tirage</p>
-                  )}
-                  <div className="mt-2 rounded-lg bg-muted/50 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total ({(stats?.tiragesJour || []).length} tirage{(stats?.tiragesJour || []).length > 1 ? "s" : ""})</p>
-                    <p className="text-xl font-bold tabular-nums mt-1">{totalJour.toLocaleString()} <span className="text-xs text-muted-foreground">HTG</span></p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Par borlette + Top vendeurs */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="border-border bg-card">
-              <CardContent className="p-5">
-                <h3 className="text-base font-semibold mb-4">Par borlette</h3>
-                {(stats?.parBorlette || []).length > 0 ? (
+                <h3 className="text-base font-semibold mb-4">Par tirage</h3>
+                {(stats?.parTirage || []).length > 0 ? (
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Borlette</th>
+                        <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tirage</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recettes</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paiements</th>
                         <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bénéfice</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(stats?.parBorlette || []).map((b) => (
-                        <tr key={b.nom} className="border-b border-border/30">
-                          <td className="py-2.5 text-sm font-medium">{b.nom}</td>
-                          <td className="py-2.5 text-sm text-right tabular-nums">{b.recettes.toLocaleString()}</td>
-                          <td className="py-2.5 text-sm text-right tabular-nums text-destructive">{b.paiements.toLocaleString()}</td>
-                          <td className="py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: "#16A34A" }}>{b.benefice.toLocaleString()}</td>
+                      {(stats?.parTirage || []).map((t) => {
+                        const color = t.nom.includes("Midi") ? TIRAGE_COLORS["Midi"] : t.nom.includes("Soir") ? TIRAGE_COLORS["Soir"] : "#6B7280";
+                        return (
+                        <tr key={t.nom} className="border-b border-border/30">
+                          <td className="py-2.5 text-sm font-medium flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: color }}></span>
+                            {t.nom} <span className="text-[10px] text-muted-foreground ml-1">({t.tickets})</span>
+                          </td>
+                          <td className="py-2.5 text-sm text-right tabular-nums">{t.recettes.toLocaleString()}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums text-destructive">{t.paiements.toLocaleString()}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: "#16A34A" }}>{t.benefice.toLocaleString()}</td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                 ) : (
@@ -296,26 +262,37 @@ export default function RapportsPage() {
                 )}
               </CardContent>
             </Card>
+          </div>
 
+          {/* Top vendeurs */}
+          <div>
             <Card className="border-border bg-card">
               <CardContent className="p-5">
                 <h3 className="text-base font-semibold mb-4">Top vendeurs</h3>
-                <div className="space-y-3">
-                  {(stats?.topVendeurs || []).length > 0 ? (
-                    (stats?.topVendeurs || []).map((v, i) => (
-                      <div key={v.nom} className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground w-4 font-bold">{i + 1}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{v.nom}</p>
-                          <p className="text-xs text-muted-foreground">{v.tickets} tickets</p>
-                        </div>
-                        <p className="text-sm font-bold text-primary tabular-nums">{v.ventes.toLocaleString()} <span className="text-[9px]">HTG</span></p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-8">Aucune vente</p>
-                  )}
-                </div>
+                {(stats?.topVendeurs || []).length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">#</th>
+                        <th className="pb-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Vendeur</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tickets</th>
+                        <th className="pb-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ventes HTG</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(stats?.topVendeurs || []).map((v, i) => (
+                        <tr key={v.nom} className="border-b border-border/30">
+                          <td className="py-2.5 text-sm font-bold text-muted-foreground">{i + 1}</td>
+                          <td className="py-2.5 text-sm font-medium">{v.nom}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums text-muted-foreground">{v.tickets}</td>
+                          <td className="py-2.5 text-sm text-right tabular-nums font-bold text-primary">{v.ventes.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">Aucune vente</p>
+                )}
               </CardContent>
             </Card>
           </div>
